@@ -4,20 +4,46 @@
 #define LED_OUT 2
 #define LM35_PIN 5
 
+#define PinA1 13
+#define PinA2 12
+#define PinB1 11
+#define PinB2 10
+
+#define RX_BLZ 8
+#define TX_BLZ 9
+
 /*************Glonal Variable****************/
-//Ê¹ÓÃÈí¼ş´®¿Ú£¬ÄÜ½«Êı×Ö¿ÚÄ£Äâ³É´®¿Ú
-SoftwareSerial BT(8, 9);  //ĞÂ½¨¶ÔÏó£¬½ÓÊÕ½ÅÎª1£¬·¢ËÍ½ÅÎª0
+//ä½¿ç”¨è½¯ä»¶ä¸²å£ï¼Œèƒ½å°†æ•°å­—å£æ¨¡æ‹Ÿæˆä¸²å£
+SoftwareSerial BT(RX_BLZ, TX_BLZ);  //æ–°å»ºå¯¹è±¡ï¼Œæ¥æ”¶è„šä¸º1ï¼Œå‘é€è„šä¸º0
 
 /*************Initialize****************/
 void InitialBluetooth() {
 	Serial.println("BT is ready!");
-	BT.begin(9600);  //ÉèÖÃ²¨ÌØÂÊ
-	pinMode(LED_OUT, OUTPUT);
-	digitalWrite(LED_OUT, LOW);
+	BT.begin(9600);  //è®¾ç½®æ³¢ç‰¹ç‡
 }
-int InitialLM35(){
-	
+void InitialLM35() {
+
 }
+void InitialL298N() {
+	pinMode(PinA1, OUTPUT);
+	pinMode(PinA2, OUTPUT);
+	pinMode(PinB1, OUTPUT);
+	pinMode(PinB2, OUTPUT);
+
+
+	digitalWrite(PinA1, HIGH);
+	digitalWrite(PinA2, LOW);
+	digitalWrite(PinB1, HIGH);
+	digitalWrite(PinB2, LOW);
+
+	analogWrite(PinA1, 100);
+	analogWrite(PinA2, 100);
+	analogWrite(PinB1, 100);
+	analogWrite(PinB2, 100);
+
+
+}
+
 
 /*************Function****************/
 int GetTemperature() {
@@ -29,17 +55,17 @@ int GetTemperature() {
 }
 
 
-
-
 void setup() {
-	Serial.begin(9600);   //ÓëµçÄÔµÄ´®¿ÚÁ¬½Ó
+	Serial.begin(9600);   //ä¸ç”µè„‘çš„ä¸²å£è¿æ¥
 	InitialBluetooth();
+	InitialL298N();
 }
 
 void loop() {
 	int tem = GetTemperature();
-	Serial.print(tem);
-	Serial.println("C");
+	if (BT.available()) {
+		Serial.println("ok");
+	}
 	delay(10);
 }
 
