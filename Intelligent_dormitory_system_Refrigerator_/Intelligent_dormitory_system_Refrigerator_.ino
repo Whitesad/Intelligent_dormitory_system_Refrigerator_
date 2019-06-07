@@ -1,5 +1,6 @@
 #include <SoftwareSerial.h>
-
+#include <LiquidCrystal.h>
+#include <MsTimer2.h>
 /*************Define Variable****************/
 #define LED_OUT 2
 #define LM35_PIN 5
@@ -15,7 +16,10 @@
 /*************Glonal Variable****************/
 //使用软件串口，能将数字口模拟成串口
 SoftwareSerial BT(RX_BLZ, TX_BLZ);  //新建对象，接收脚为1，发送脚为0
-
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+int Current_Tem = 0;
+int Target_Tem = 30;
+bool isCurrentShow = true;
 /*************Initialize****************/
 void InitialBluetooth() {
 	Serial.println("BT is ready!");
@@ -44,6 +48,10 @@ void InitialL298N() {
 
 }
 
+void Initial1602A() {
+	lcd.begin(16, 2);
+	lcd.print("Current Tem");
+}
 
 /*************Function****************/
 int GetTemperature() {
@@ -54,19 +62,51 @@ int GetTemperature() {
 	return dat;
 }
 
+void SetPwm(int pwm) {
+	return;
+	analogWrite(PinA1, pwm);
+	analogWrite(PinB1, pwm);
+}
+
+float P = 51;
+void Kernel() {
+	Current_Tem = GetTemperature();
+	int PWM = P * (Current_Tem - Target_Tem);
+	SetPwm(PWM);
+	delay(10);
+}
+void UpdateTem() {
+	if (isCurrentShow) {
+		lcd.setCursor(0, 1);
+		lcd.print(Current_Tem);
+		lcd.print("C");
+	}
+}
 
 void setup() {
 	Serial.begin(9600);   //与电脑的串口连接
+	InitialLM35();
 	InitialBluetooth();
-	InitialL298N();
+	Initial1602A();
+
+	MsTimer2::set(5, Kernel);
+	MsTimer2::start();
+	//InitialL298N();
 }
 
 void loop() {
-	int tem = GetTemperature();
 	if (BT.available()) {
-		Serial.println("ok");
+		isCurrentShow = false;
+		lcd.setCursor(0, 0);
+		lcd.print("           ");
+		lcd.setCursor(0, 0);
+		lcd.print("Target Tem");
+		lcd.setCursor(0, 1);
+		lcd.print(Target_Tem);
+		lcd.print("C");
 	}
-	delay(10);
+	UpdateTem();
+	delay(1);
 }
 
 //10.175.196.1
