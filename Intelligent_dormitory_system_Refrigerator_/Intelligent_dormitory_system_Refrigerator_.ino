@@ -71,8 +71,8 @@ int GetTemperature() {
 }
 
 void SetPwm(int pwm) {
-	analogWrite(PinA1, 0);
-	analogWrite(PinB2, pwm);
+	analogWrite(PinA1, pwm);
+	analogWrite(PinB1, pwm);
 	return;
 }
 
@@ -87,7 +87,8 @@ void Kernel() {
 		PWM = 0;
 	}
 	SetPwm(PWM);
-	delay(10);
+
+	delay(45);
 }
 void ShowCurretTem() {
 	lcd.setCursor(0, 1);
@@ -97,7 +98,7 @@ void ShowCurretTem() {
 void ShowTargetTem() {
 	lcd.setCursor(0, 1);
 	lcd.print(Target_Tem);
-	lcd.print("C");
+	lcd.print("C ");
 }
 void BluzDebug() {
 	if (Serial.available())
@@ -106,6 +107,21 @@ void BluzDebug() {
 	if (BT.available())
 		Serial.write(BT.read());
 }
+char str[32];
+char Currt_str[8];
+void SendTem() {
+	for (int i = 0; i < 6; i++) {
+		memset(str, 0, sizeof(str));
+		strcpy(str, "{\"c\":\"");
+		strcat(str, itoa(Current_Tem, Currt_str, 10));
+		strcat(str, "\",\"t\":\"");
+		strcat(str, itoa(Target_Tem, Currt_str, 10));
+		strcat(str, "\"}");
+		BT.write(str);
+		delay(1);
+	}
+}
+
 void setup() {
 	Serial.begin(9600);   //与电脑的串口连接
 	InitialLM35();
@@ -129,18 +145,23 @@ void loop() {
 		{
 		case 'U':
 			InitialTargetTem();
-			if (Target_Tem <= 15)
+			if (Target_Tem < 15)
 				Target_Tem++;
 			isCurrentShow = false;
 			Serial.println("U");
+			SendTem();
 			break;
 		case 'D':
 			InitialTargetTem();
-			if (Target_Tem >= 5)
+			if (Target_Tem > 5)
 				Target_Tem--;
 			isCurrentShow = false;
 			Serial.println("D");
+			SendTem();
 			break;
+		case 'S':
+			Serial.println("S");
+			SendTem();
 		}
 	}
 	if (isCurrentShow)
